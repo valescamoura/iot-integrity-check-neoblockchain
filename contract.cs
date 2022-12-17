@@ -11,7 +11,7 @@ namespace IoTIntegrityCheck
 {
     [ManifestExtra("Author", "Neo")]
     [ManifestExtra("Email", "dev@neo.org")]
-    [ManifestExtra("Description", "This is a contract example")]
+    [ManifestExtra("Description", "This is a integrity check contract")]
     public class IntegrityCheck : SmartContract
     {
         [InitialValue("NforeidHBjJDK6sGdxiAMRfQwW8UnkwMFm", ContractParameterType.Hash160)]
@@ -27,7 +27,7 @@ namespace IoTIntegrityCheck
 
         private static String SerializeVector(String[] vector)
         {
-            String SerializedVector = ""
+            String SerializedVector = "";
             foreach (String v in vector)
             {
                 SerializedVector += v + "-";
@@ -35,9 +35,9 @@ namespace IoTIntegrityCheck
             return SerializedVector;
         }
 
-        private static String[] DeserializeVector(String string)
+        private static String[] DeserializeVector(String VectorStr)
         {
-            return string.Split( '-' );
+            return StdLib.StringSplit(VectorStr, "-");
         }
 
         private static String[] GetAdministrativeEntities()
@@ -64,21 +64,29 @@ namespace IoTIntegrityCheck
             Storage.Put(Storage.CurrentContext, "ECs", value);
         }
 
-        private static void RemoveEA(String EntityId) 
-        {
-            String ActualAdministrativeEntities = Serialize(GetAdministrativeEntities());
-            String NewAdministrativeEntities = ActualAdministrativeEntities.Replace($"-{EntityId}", "");
-            String value = NewAdministrativeEntities;
-            Storage.Put(Storage.CurrentContext, "EAs", value);
-        }
+        // private static String[] RemoveElement(String[] v, String e)
+        // {
+        //     foreach (String w in v)
+        //     {
+                
+        //     }
+        // }
 
-        private static void RemoveEC(String EntityId)
-        {
-            String ActualCommonEntities = Serialize(GetCommonEntities());
-            String NewCommonEntities = ActualCommonEntities.Replace($"-{EntityId}", "");
-            String value = NewCommonEntities;
-            Storage.Put(Storage.CurrentContext, "ECs", value);
-        }
+        // private static void RemoveEA(String EntityId) 
+        // {
+        //     String ActualAdministrativeEntities = GetAdministrativeEntities();
+        //     String NewAdministrativeEntities = SerializeVector(RemoveElement(ActualAdministrativeEntities, EntityId));
+        //     String value = NewAdministrativeEntities;
+        //     Storage.Put(Storage.CurrentContext, "EAs", value);
+        // }
+
+        // private static void RemoveEC(String EntityId)
+        // {
+        //     String ActualCommonEntities = GetCommonEntities();
+        //     String NewCommonEntities = SerializeVector(RemoveElement(ActualCommonEntities, EntityId));
+        //     String value = NewCommonEntities;
+        //     Storage.Put(Storage.CurrentContext, "ECs", value);
+        // }
 
         private static bool IsAdministrativeEntity(String id) 
         {
@@ -127,7 +135,7 @@ namespace IoTIntegrityCheck
             {
                 if(IsAdministrativeEntity(EntityId) | IsCommonEntity(EntityId) | EntityId == OwnerStr) 
                 {
-                    return True;
+                    return true;
                 }
             }
             return false;
@@ -137,9 +145,8 @@ namespace IoTIntegrityCheck
         {
             if(IsOwner() | IsAdministrativeEntity(WitnessId)) {
                 String ParentId = WitnessId;
-                String key = EntityWalletAddress;
-                String value = $"{SubjectInfo}-{ParentId}" // utilizando strings pois nao foi possível persistir outro tipo de dado
-                Storage.Put(Storage.CurrentContext, key, value);
+                String value = $"{SubjectInfo}-{ParentId}"; // utilizando strings pois nao foi possível persistir outro tipo de dado
+                Storage.Put(Storage.CurrentContext, EntityWalletAddress, value);
 
                 if(EntityType == "EA")
                 {
@@ -156,26 +163,26 @@ namespace IoTIntegrityCheck
             }
         }
 
-        public static string DeleteEntity(String EntityType, String EntityWalletAddress, String WitnessId = "MASTER")
-        {
-            if(IsOwner() | IsAdministrativeEntity(WitnessId)) {
-                String key = EntityWalletAddress;
-                Storage.Delete(Storage.CurrentContext, key);
+        // public static string DeleteEntity(String EntityType, String EntityWalletAddress, String WitnessId = "MASTER")
+        // {
+        //     if(IsOwner() | IsAdministrativeEntity(WitnessId)) {
+        //         String key = EntityWalletAddress;
+        //         Storage.Delete(Storage.CurrentContext, key);
 
-                if(EntityType == "EA")
-                {
-                    RemoveEA(EntityWalletAddress);
-                }
-                else
-                {
-                    RemoveEC(EntityWalletAddress);
-                }
-                return "Entidade remover com sucesso.";
-            }
-            else {
-                return "Nao foi possivel remover a entidade, voce nao possui permissao.";
-            }
-        }
+        //         if(EntityType == "EA")
+        //         {
+        //             RemoveEA(EntityWalletAddress);
+        //         }
+        //         else
+        //         {
+        //             RemoveEC(EntityWalletAddress);
+        //         }
+        //         return "Entidade remover com sucesso.";
+        //     }
+        //     else {
+        //         return "Nao foi possivel remover a entidade, voce nao possui permissao.";
+        //     }
+        // }
 
         public static String[] GetEntities(String WitnessId = "MASTER")
         {
@@ -187,7 +194,9 @@ namespace IoTIntegrityCheck
                 return es;
             }
             else {
-                return ["Nao foi possivel remover a entidade, voce nao possui permissao."];
+                String[] e = new String[1];
+                e[0] = "Voce nao possui permissao.";
+                return e;
             }
         }
 
@@ -210,8 +219,8 @@ namespace IoTIntegrityCheck
             if (update) return;
       
             Storage.Put(Storage.CurrentContext, "MASTER", OwnerStr);
-            Storage.Put(Storage.CurrentContext, "EAs", SerializeVector(AdministrativeEntities));
-            Storage.Put(Storage.CurrentContext, "ECs", SerializeVector(CommonEntities));
+            // Storage.Put(Storage.CurrentContext, "EAs", SerializeVector(AdministrativeEntities));
+            // Storage.Put(Storage.CurrentContext, "ECs", SerializeVector(CommonEntities));
         }
 
         public static void Update(ByteString nefFile, string manifest)
